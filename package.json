@@ -1,0 +1,26 @@
+{
+  "name": "aws-utilities",
+  "version": "1.0.0",
+  "description": "Several AWS utilities to make life easier",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kerueter/aws-utilities.git"
+  },
+  "keywords": [
+    "aws",
+    "utilities"
+  ],
+  "author": "Kevin Rueter <k.rueter93@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kerueter/aws-utilities/issues"
+  },
+  "homepage": "https://github.com/kerueter/aws-utilities#readme",
+  "dependencies": {
+    "aws-sdk": "^2.834.0"
+  }
+}
