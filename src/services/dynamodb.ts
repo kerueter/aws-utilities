@@ -5,7 +5,8 @@ import { DocumentClient, BatchWriteItemInput, WriteRequest } from "aws-sdk/clien
 export class DynamoDBService extends DynamoDB.DocumentClient {
   
   constructor() {
-    super();
+    const options = { region: 'eu-central-1' };
+    super(options);
   }
 
   /**
