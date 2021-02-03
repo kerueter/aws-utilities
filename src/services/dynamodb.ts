@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { DynamoDB } from "aws-sdk"; 
-import { DocumentClient, BatchWriteItemInput, WriteRequest } from "aws-sdk/clients/dynamodb";
+import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
 
 export class DynamoDBService extends DynamoDB.DocumentClient {
   
@@ -14,7 +14,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
    * @param sourceTable 
    * @param destinationTable 
    */
-  async copy(sourceTable: string, destinationTable: string): Promise<any> {
+  async copy(sourceTable: string, destinationTable: string): Promise<void> {
     const scanParams = { TableName: sourceTable };
 
     let scanResult;
@@ -31,7 +31,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
   /**
    * 
    */
-  async import(sourceFile: string, destinationTable: string): Promise<any> {
+  async import(sourceFile: string, destinationTable: string): Promise<void> {
     let data;
     try {
       const fileStr = fs.readFileSync(sourceFile).toString();
@@ -42,6 +42,45 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
     } catch (err) {
       throw err;
     }
+  }
+
+  /**
+   * 
+   */
+  async export(sourceTable: string, destinationFile: string): Promise<void> {
+    try {
+      const items = await this.scanAll(sourceTable);
+      console.log(JSON.stringify(items));
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * 
+   */
+  private async scanAll(table: string): Promise<Array<any>> {
+    const SCAN_TIMEOUT = 1000;
+    const items = new Array<any>();
+
+    const scanParams: ScanInput = { TableName: table };
+    let scanResult: ScanOutput;
+    do {
+      try {
+        scanResult = await this.scan(scanParams).promise();
+      } catch (err) {
+        throw err;
+      }
+  
+      if (scanResult.Items && scanResult.Items.length > 0) {
+        items.push(...scanResult.Items);
+      }
+      scanParams.ExclusiveStartKey = scanResult.LastEvaluatedKey;
+
+      await this.timeout(SCAN_TIMEOUT);
+    } while (scanParams.ExclusiveStartKey);
+
+    return items;
   }
 
   /**
