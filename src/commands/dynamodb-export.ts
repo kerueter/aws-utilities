@@ -12,7 +12,8 @@ export default class DynamoDBExportCommand extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     sourceTable: flags.string({char: 's', description: 'DynamoDB source table'}),
-    destinationFile: flags.string({char: 'd', description: 'DynamoDB destination table'})
+    destinationFile: flags.string({char: 'd', description: 'DynamoDB destination table'}),
+    region: flags.string({char: 'r', description: 'DynamoDB region'})
   }
 
   static args = [ {name: 'file'} ];
@@ -28,7 +29,7 @@ export default class DynamoDBExportCommand extends Command {
       throw new Error("No destination table has been specified. Exiting.");
     }
 
-    const dynamodbService = new DynamoDBService();
+    const dynamodbService = new DynamoDBService(flags.region);
     try { 
       await dynamodbService.export(flags.sourceTable, flags.destinationFile);
       this.log("Successfully exported items from source table to destination file.");

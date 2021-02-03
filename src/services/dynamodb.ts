@@ -4,8 +4,8 @@ import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutpu
 
 export class DynamoDBService extends DynamoDB.DocumentClient {
   
-  constructor() {
-    const options = { region: 'eu-central-1' };
+  constructor(region?: string) {
+    const options = { region: region ? region : 'eu-central-1' };
     super(options);
   }
 
