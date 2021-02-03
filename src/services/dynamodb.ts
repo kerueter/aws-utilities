@@ -5,7 +5,14 @@ import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutpu
 export class DynamoDBService extends DynamoDB.DocumentClient {
   
   constructor(region?: string) {
-    const options = { region: region ? region : 'eu-central-1' };
+    const options: { region: string, endpoint?: string } = {
+      region: region ? region : 'eu-central-1'
+    };
+  
+    if (options.region === 'localhost') {
+      options.endpoint = 'http://localhost:8000';
+    }
+
     super(options);
   }
 
