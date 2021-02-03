@@ -6,7 +6,7 @@ export default class DynamoDBExportCommand extends Command {
   static description = 'describe the command here'
 
   static examples = [
-    `$ aws-utils dynamodb-import`,
+    `$ aws-utils dynamodb-export`,
   ]
 
   static flags = {

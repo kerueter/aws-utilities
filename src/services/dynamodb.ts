@@ -15,13 +15,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
    * @param destinationTable 
    */
   async copy(sourceTable: string, destinationTable: string): Promise<void> {
-    const scanParams = { TableName: sourceTable };
-
-    let scanResult;
     try {
-      scanResult = await this.scan(scanParams).promise();
-
-      const items = scanResult && scanResult.Items && scanResult.Items.length > 0 ? [...scanResult.Items] : [];
+      const items = await this.scanAll(sourceTable);
       await this.batchWriteAll(items, destinationTable);
     } catch (err) {
       throw err;
@@ -50,7 +45,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
   async export(sourceTable: string, destinationFile: string): Promise<void> {
     try {
       const items = await this.scanAll(sourceTable);
-      console.log(JSON.stringify(items));
+      fs.writeFileSync(destinationFile, JSON.stringify(items));
     } catch (err) {
       throw err;
     }
@@ -77,7 +72,9 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       }
       scanParams.ExclusiveStartKey = scanResult.LastEvaluatedKey;
 
-      await this.timeout(SCAN_TIMEOUT);
+      if (scanParams.ExclusiveStartKey) {
+        await this.timeout(SCAN_TIMEOUT);
+      }
     } while (scanParams.ExclusiveStartKey);
 
     return items;
