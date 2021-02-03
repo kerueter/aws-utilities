@@ -2,7 +2,7 @@ import { Command, flags } from '@oclif/command';
 
 import { DynamoDBService } from "../services/dynamodb";
 
-export default class DynamoDBCopyCommand extends Command {
+export default class DynamoDBImportCommand extends Command {
   static description = 'describe the command here'
 
   static examples = [
@@ -18,10 +18,10 @@ export default class DynamoDBCopyCommand extends Command {
   static args = [ {name: 'file'} ];
 
   async run() {
-    const { args, flags } = this.parse(DynamoDBCopyCommand);
+    const { args, flags } = this.parse(DynamoDBImportCommand);
 
     if (!flags.sourceFile) {
-      throw new Error("No source table has been specified. Exiting.");
+      throw new Error("No source file has been specified. Exiting.");
     }
 
     if (!flags.destinationTable) {        
