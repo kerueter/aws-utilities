@@ -52,6 +52,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
     const MAX_RETRIES = 5;
 
     let retries = 0;
+    let batchNo = 0;
     while (items.length > 0 && retries < MAX_RETRIES) {
       const bwParams: BatchWriteItemInput = { RequestItems: {} };
       bwParams["RequestItems"][`${table}`] = new Array<WriteRequest>();
@@ -67,6 +68,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       });
     
       try {
+        console.log(`Upload batch ${++batchNo}.`);
         const bwData = await this.batchWrite(bwParams).promise();
 
         if (bwData && 
@@ -77,10 +79,25 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
           items.push(...bwData["UnprocessedItems"][`${table}`]);
           retries++;
         }
-        setTimeout(() => console.log("Timeout..."), BATCH_WRITE_TIMEOUT);
+        
+        await this.timeout(BATCH_WRITE_TIMEOUT);
       } catch (bwErr) {
         throw bwErr;
       }
     }
+
+    console.log(`Uploaded ${batchNo} batches.`);
+
+    if (retries >= MAX_RETRIES) {
+      throw new Error(`Exceeded maximum retries while batch writing to ${table}.`);
+    }
+  }
+
+  /**
+   * 
+   * @param ms 
+   */
+  private async timeout(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
