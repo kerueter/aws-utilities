@@ -20,11 +20,12 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
    * 
    * @param sourceTable 
    * @param destinationTable 
+   * @param timeout 
    */
-  async copy(sourceTable: string, destinationTable: string): Promise<void> {
+  async copy(sourceTable: string, destinationTable: string, timeout?: number): Promise<void> {
     try {
       const items = await this.scanAll(sourceTable);
-      await this.batchWriteAll(items, destinationTable);
+      await this.batchWriteAll(items, destinationTable, timeout);
     } catch (err) {
       throw err;
     }
@@ -32,15 +33,18 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
 
   /**
    * 
+   * @param sourceFile 
+   * @param destinationTable 
+   * @param timeout 
    */
-  async import(sourceFile: string, destinationTable: string): Promise<void> {
+  async import(sourceFile: string, destinationTable: string, timeout?: number): Promise<void> {
     let data;
     try {
       const fileStr = fs.readFileSync(sourceFile).toString();
       data = JSON.parse(fileStr);
 
       const items = data && Array.isArray(data) && data.length > 0 ? [...data] : [];
-      await this.batchWriteAll(items, destinationTable);
+      await this.batchWriteAll(items, destinationTable, timeout);
     } catch (err) {
       throw err;
     }
@@ -48,6 +52,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
 
   /**
    * 
+   * @param sourceTable 
+   * @param destinationFile 
    */
   async export(sourceTable: string, destinationFile: string): Promise<void> {
     try {
@@ -60,6 +66,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
 
   /**
    * 
+   * @param table 
    */
   private async scanAll(table: string): Promise<Array<any>> {
     const SCAN_TIMEOUT = 1000;
@@ -89,9 +96,11 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
 
   /**
    * 
+   * @param items 
+   * @param table 
+   * @param timeout 
    */
-  private async batchWriteAll(items: Array<any>, table: string): Promise<void> {
-    const BATCH_WRITE_TIMEOUT = 1000;
+  private async batchWriteAll(items: Array<any>, table: string, timeout: number = 1000): Promise<void> {
     const MAX_RETRIES = 5;
 
     let retries = 0;
@@ -123,7 +132,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
           retries++;
         }
         
-        await this.timeout(BATCH_WRITE_TIMEOUT);
+        await this.timeout(timeout);
       } catch (bwErr) {
         throw bwErr;
       }
