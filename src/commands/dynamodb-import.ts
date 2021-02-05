@@ -13,7 +13,8 @@ export default class DynamoDBImportCommand extends Command {
     help: flags.help({char: 'h'}),
     sourceFile: flags.string({char: 's', description: 'DynamoDB source table'}),
     destinationTable: flags.string({char: 'd', description: 'DynamoDB destination table'}),
-    region: flags.string({char: 'r', description: 'DynamoDB region'})
+    region: flags.string({char: 'r', description: 'DynamoDB region'}),
+    timeout: flags.integer({char: 't', description: 'Timeout between batches'}),
   }
 
   static args = [ {name: 'file'} ];
@@ -31,7 +32,7 @@ export default class DynamoDBImportCommand extends Command {
 
     const dynamodbService = new DynamoDBService(flags.region);
     try { 
-      await dynamodbService.import(flags.sourceFile, flags.destinationTable);
+      await dynamodbService.import(flags.sourceFile, flags.destinationTable, flags.timeout);
       this.log("Successfully imported items from source file to destination table.");
     } catch (err) {
       throw err;

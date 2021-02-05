@@ -13,7 +13,8 @@ export default class DynamoDBCopyCommand extends Command {
     help: flags.help({char: 'h'}),
     sourceTable: flags.string({char: 's', description: 'DynamoDB source table'}),
     destinationTable: flags.string({char: 'd', description: 'DynamoDB destination table'}),
-    region: flags.string({char: 'r', description: 'DynamoDB region'})
+    region: flags.string({char: 'r', description: 'DynamoDB region'}),
+    timeout: flags.integer({char: 't', description: 'Timeout between batches'})
   }
 
   static args = [ {name: 'file'} ];
@@ -31,7 +32,7 @@ export default class DynamoDBCopyCommand extends Command {
 
     const dynamodbService = new DynamoDBService(flags.region);
     try { 
-      await dynamodbService.copy(flags.sourceTable, flags.destinationTable);
+      await dynamodbService.copy(flags.sourceTable, flags.destinationTable, flags.timeout);
       this.log("Successfully copied items from source table to destination table.");
     } catch (err) {
       throw err;
