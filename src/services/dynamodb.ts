@@ -3,6 +3,7 @@ import { DynamoDB } from "aws-sdk";
 import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
 
 export class DynamoDBService extends DynamoDB.DocumentClient {
+  private dynamodb: DynamoDB;
   
   constructor(region?: string) {
     const options: { region: string, endpoint?: string } = {
@@ -14,6 +15,33 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
     }
 
     super(options);
+
+    this.dynamodb = new DynamoDB(options);
+  }
+
+  /**
+   * 
+   */
+  async listTables(): Promise<any> {
+    const tableNames = new Array<any>();
+    const listTablesParams: DynamoDB.ListTablesInput = {Limit: 100};
+
+    let tableNamesResult: DynamoDB.ListTablesOutput;
+    do {
+      try {
+        tableNamesResult = await this.dynamodb.listTables(listTablesParams).promise();
+      } catch (err) {
+        throw err;
+      }
+
+      if (tableNamesResult.TableNames && tableNamesResult.TableNames.length > 0) {
+        tableNames.push(...tableNamesResult.TableNames);
+      }
+      listTablesParams.ExclusiveStartTableName = tableNamesResult.LastEvaluatedTableName;
+
+    } while (listTablesParams.ExclusiveStartTableName);
+
+    return tableNames
   }
 
   /**
