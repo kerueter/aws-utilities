@@ -50,9 +50,16 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
    * @param destinationTable 
    * @param timeout 
    */
-  async copy(sourceTable: string, destinationTable: string, timeout?: number): Promise<void> {
+  async copy(sourceTable: string, destinationTable: string, timeout?: number, filters?: Array<any>): Promise<void> {
     try {
-      const items = await this.scanAll(sourceTable);
+      let items = await this.scanAll(sourceTable);
+
+      if (filters) {
+        for (const filter of filters) {
+          items = items.filter(item => item[filter.key] && item[filter.key] === filter.value);
+        }
+      }
+
       await this.batchWriteAll(items, destinationTable, timeout);
     } catch (err) {
       throw err;
