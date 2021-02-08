@@ -22,7 +22,7 @@ export default class DynamoDBExportCommand extends Command {
     const dynamodbService = new DynamoDBService(flags.region);
     try {
       const tables = await dynamodbService.listTables();
-      this.log(tables);
+      console.table(tables);
     } catch (err) {
       throw err;
     }
