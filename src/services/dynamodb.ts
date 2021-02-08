@@ -54,10 +54,15 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
     try {
       let items = await this.scanAll(sourceTable);
 
-      if (filters) {
-        for (const filter of filters) {
-          items = items.filter(item => item[filter.key] && item[filter.key] === filter.value);
-        }
+      if (filters && filters.length > 0) {
+        items = items.filter(item => {
+          for (const filter of filters) {
+            if (item[filter.key] && item[filter.key] === filter.value) {
+              return true;
+            }
+          }
+          return false;
+        });
       }
 
       await this.batchWriteAll(items, destinationTable, timeout);
