@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 import { DynamoDB } from "aws-sdk"; 
-import { BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
+import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
 
-import { LoggingService } from "./logging";
+import { Service } from "./service";
 
-export class DynamoDBService extends DynamoDB.DocumentClient {
+export class DynamoDBService extends Service {
   private dynamodb: DynamoDB;
+  private documentClient: DocumentClient;
   
   constructor(region?: string) {
     const options: { region: string, endpoint?: string } = {
@@ -16,9 +17,10 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       options.endpoint = 'http://localhost:8000';
     }
 
-    super(options);
+    super();
 
     this.dynamodb = new DynamoDB(options);
+    this.documentClient = new DocumentClient(options);
   }
 
   /**
@@ -57,7 +59,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       let items = await this.scanAll(sourceTable);
 
       if (filters && filters.length > 0) {
-        LoggingService.getInstance().log(`Filter items with following filters: ${JSON.stringify(filters)}`);
+        this.log(`Filter items with following filters: ${JSON.stringify(filters)}`);
 
         items = items.filter(item => {
           for (const filter of filters) {
@@ -68,7 +70,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
           return false;
         });
 
-        LoggingService.getInstance().log(`Items after filtering: ${items.length}`);
+        this.log(`Items after filtering: ${items.length}`);
       }
 
       await this.batchWriteAll(items, destinationTable, timeout);
@@ -122,7 +124,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
     let scanResult: ScanOutput;
     do {
       try {
-        scanResult = await this.scan(scanParams).promise();
+        scanResult = await this.documentClient.scan(scanParams).promise();
       } catch (err) {
         throw err;
       }
@@ -137,7 +139,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       }
     } while (scanParams.ExclusiveStartKey);
 
-    LoggingService.getInstance().log(`Scanned ${items.length} items from table ${table}`);
+    this.log(`Scanned ${items.length} items from table ${table}`);
 
     return items;
   }
@@ -168,8 +170,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       });
     
       try {
-        LoggingService.getInstance().log(`Upload batch ${++batchNo}.`);
-        const bwData = await this.batchWrite(bwParams).promise();
+        this.log(`Upload batch ${++batchNo}.`);
+        const bwData = await this.documentClient.batchWrite(bwParams).promise();
 
         if (bwData && 
           bwData.UnprocessedItems && 
@@ -186,7 +188,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       }
     }
 
-    LoggingService.getInstance().log(`Uploaded ${batchNo} batches.`);
+    this.log(`Uploaded ${batchNo} batches.`);
 
     if (retries >= MAX_RETRIES) {
       throw new Error(`Exceeded maximum retries while batch writing to ${table}.`);

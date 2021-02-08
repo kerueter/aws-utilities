@@ -1,22 +1,4 @@
-export class LoggingService {
-  private static instance: LoggingService;
-
-  /**
-   * 
-   */
-  private constructor() {}
-
-  /**
-   * 
-   */
-  static getInstance(): LoggingService {
-    if (!LoggingService.instance) {
-      LoggingService.instance = new LoggingService();
-    }
-
-    return LoggingService.instance;
-  }
-
+export class Service {
   /**
    * 
    * @param message 
