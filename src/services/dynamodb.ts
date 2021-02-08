@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import { DynamoDB } from "aws-sdk"; 
-import { DocumentClient, BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
+import { BatchWriteItemInput, WriteRequest, ScanInput, ScanOutput } from "aws-sdk/clients/dynamodb";
+
+import { LoggingService } from "./logging";
 
 export class DynamoDBService extends DynamoDB.DocumentClient {
   private dynamodb: DynamoDB;
@@ -55,6 +57,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       let items = await this.scanAll(sourceTable);
 
       if (filters && filters.length > 0) {
+        LoggingService.getInstance().log(`Filter items with following filters: ${JSON.stringify(filters)}`);
+
         items = items.filter(item => {
           for (const filter of filters) {
             if (item[filter.key] && item[filter.key] === filter.value) {
@@ -63,6 +67,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
           }
           return false;
         });
+
+        LoggingService.getInstance().log(`Items after filtering: ${items.length}`);
       }
 
       await this.batchWriteAll(items, destinationTable, timeout);
@@ -131,6 +137,8 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       }
     } while (scanParams.ExclusiveStartKey);
 
+    LoggingService.getInstance().log(`Scanned ${items.length} items from table ${table}`);
+
     return items;
   }
 
@@ -160,7 +168,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       });
     
       try {
-        console.log(`Upload batch ${++batchNo}.`);
+        LoggingService.getInstance().log(`Upload batch ${++batchNo}.`);
         const bwData = await this.batchWrite(bwParams).promise();
 
         if (bwData && 
@@ -178,7 +186,7 @@ export class DynamoDBService extends DynamoDB.DocumentClient {
       }
     }
 
-    console.log(`Uploaded ${batchNo} batches.`);
+    LoggingService.getInstance().log(`Uploaded ${batchNo} batches.`);
 
     if (retries >= MAX_RETRIES) {
       throw new Error(`Exceeded maximum retries while batch writing to ${table}.`);
