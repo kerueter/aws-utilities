@@ -28,7 +28,7 @@ export class DynamoDBService extends Service {
    */
   async listTables(): Promise<any> {
     const tableNames = new Array<any>();
-    const listTablesParams: DynamoDB.ListTablesInput = {Limit: 100};
+    const listTablesParams: DynamoDB.ListTablesInput = { Limit: 100 };
 
     let tableNamesResult: DynamoDB.ListTablesOutput;
     do {
@@ -45,7 +45,35 @@ export class DynamoDBService extends Service {
 
     } while (listTablesParams.ExclusiveStartTableName);
 
-    return tableNames
+    return tableNames;
+  }
+
+  /**
+   *
+   */
+  async getItem(table: string, partitionKey: { key: string, value: string }, sortKey?: { key: string, value: string }): Promise<any> {
+    const params: DocumentClient.GetItemInput = {
+      TableName: table,
+      Key: {}
+    };
+
+    params.Key[partitionKey.key] = partitionKey.value;
+    if (sortKey) {
+      params.Key[sortKey.key] = sortKey.value;
+    }
+
+    let result: DocumentClient.GetItemOutput;
+    try {
+      result = await this.documentClient.get(params).promise();
+    } catch (err) {
+      throw err;
+    }
+
+    if (!result.Item) {
+      throw new Error("Unable to get item from database.");
+    }
+
+    return result.Item;
   }
 
   /**
